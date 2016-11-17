@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html lang="zh-cn">
+<head>
+<title>{% block title %}{% endblock %}</title>
+<link href="/static/admin/css/bootstrap.min.css" rel="stylesheet" type="text/css" media="all">
+<link href="/static/admin/css/style.css" rel="stylesheet" type="text/css" media="all" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="Django" />
+<script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
+<script src="http://libs.baidu.com/jquery/1.9.1/jquery.min.js"></script>
+<!---- start-smoth-scrolling---->
+<script type="text/javascript" src="/static/admin/js/move-top.js"></script>
+<script type="text/javascript" src="/static/admin/js/easing.js"></script>
+{% block scripts %}{% endblock %}
+ <script type="text/javascript">
+		jQuery(document).ready(function($) {
+			$(".scroll").click(function(event){		
+				event.preventDefault();
+				$('html,body').animate({scrollTop:$(this.hash).offset().top},1200);
+			});
+		});
+	</script>
+<!---End-smoth-scrolling---->
+</head>
+<body>
+    <!--header-->
+        <div class="header">
+            <div class="container">
+                <div class="header-top">
+                    <div class="logo">
+                        <a href="/">Huang <span>junjun</span></a>
+                    </div>
+                    <div class="top-menu">
+                        <span class="menu"><img src="/static/admin/img/nav.png" alt=""/> </span>
+                        <ul>
+                            <li><a href="/" class="active">主页</a></li>
+                            <li><a href="/django/">Django</a></li>
+                            <li><a href="/contact/">联系我</a></li>
+                            {% if request.user.is_authenticated %}
+                            <li>欢迎,<a href="/accounts/messages/{{request.user}}/">{{request.user}}</a></li>
+                            <li><a href="/accounts/changepassword/{{request.user}}/">修改密码</a></li>
+                            <li><a href="/accounts/logout/">退出</a></li>
+                            {% else %}
+                            <li><a href="/accounts/register/">注册</a></li>
+                            <li><a href="/accounts/login/">登录</a></li>
+                            {% endif %}
+                            <li><a href="/upload/">上传TXT</a></li>
+                        </ul>
+                    </div>
+                     <!--script-nav-->
+                     <script>
+                     $("span.menu").click(function(){
+                     $(".top-menu ul").slideToggle("slow" , function(){
+                        });
+                     });
+                     </script>
+                    <div class="clerfix">阿里云服务器(ECS)推荐码:5oone6 </div>
+                </div>
+            </div>
+        </div>
+    <!--header-->
+    {% block content%}{% endblock %}
+    <!--footer-->
+			<div class="footer text-center">
+				<div class="container">
+					<div class="copy">
+						<p>Copyright &copy; 2016.All rights reserved.</p>
+					</div>
+					<script type="text/javascript">
+						$(document).ready(function() {
+							$().UItoTop({ easingType: 'easeOutQuart' });
+							
+						});
+					</script>
+				<a href="#head" id="toTop" style="display: block;"> <span id="toTopHover" style="opacity: 1;"> </span></a>
+				</div>
+			</div>	
+<!--footer-->			
+</body>
+</html>

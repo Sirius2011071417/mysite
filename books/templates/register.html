@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}
+    register
+{% endblock %}
+
+{% block content %}
+    <div class="content">
+        <div class="welcome">
+            <div class="container">
+                <img src="/static/admin/img/register.gif" alt="register" />
+                {% for e in error %}
+                    <p style="color:red;">{{e}}</p>
+                {% endfor %}
+                <form action="" method="post">
+                    {% csrf_token %}
+                    {{form.as_p}}
+                    <input type="submit" value="注册"/>
+                    <a href="/accounts/login/"><input type="button" value="登录"/></a>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

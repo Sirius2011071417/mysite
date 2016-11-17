@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}
+    my messages
+{% endblock %}
+
+{% block content %}
+    <div class="content">
+        <div class="welcome">
+            <div class="container">
+                <ul>
+                    {% for m in mylist %}
+                        <li>留言历史&nbsp;&nbsp;主题：{{m.subject}}&nbsp;内容：{{m.content}}&nbsp;时间：{{m.datetime}}</li>
+                    {% empty %}
+                        <li>对不起，您暂时没有消息！</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

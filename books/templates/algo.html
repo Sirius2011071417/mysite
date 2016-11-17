@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}
+    algo
+{% endblock %}
+
+{% block scripts %}
+    <script src="http://echarts.baidu.com/build/dist/echarts.js"></script>
+    <script type="text/javascript">
+        function vaildNum(obj, regex){
+            if (regex.test(obj.value)){
+                obj.style.border = "2px green solid";
+            }else{
+                obj.style.border = "2px red solid";
+            }
+        }
+        $(document).ready(function(){
+            $("#uploadbtn").click(function(){
+                $.ajax({
+                    url:"/upload/success/",
+                    method:"POST",
+                    cache:false,
+                    data:new FormData($("#uploadform")[0]),
+                    processData:false,
+                    contentType:false
+                }).done(function(ret){
+                   $("#uploadresult").html(ret);
+                   alert(ret);
+                }).fail(function(jqXHR, textStatus){
+                    alert("上传失败:" + textStatus);
+                });
+            });
+            
+            $("#algo").change(function(){
+                var algoid = $("#algo").val();
+                var algoname = $("#algo").find("option:selected").text();
+                //$("#plot").attr("src", "/static/" + algoid + ".jpg");
+                console.log(algoname);
+                $.ajax({
+                    url:"/algo/",
+                    data:{'algoid':algoid,'algoname':algoname},
+                    dataType:"json",
+                    async:false,
+                    method:"GET"
+                }).done(function(ret){
+                       $("#resultx").html("");
+                       $("#resulty").html("");
+                       $("#resultw").html("");
+                       $("#resultyp").html("");
+                       $("#resulte").html("");
+                       $("#vaildx").html("");
+                       var len = ret.dataMat.length<20?ret.dataMat.length:20;
+                       var str = "";
+                       for(var j=0;j<ret.xCnt;j++){
+                           //$("#resultx").append("x" + j + " ");
+                           str = str + "x" + j + " ";
+                       }
+                       $("#resultx").append("<div><mark>"+str+"</mark></div>");
+                       $("#resulty").append("<mark>y</mark>");
+                       $("#resultw").append("<mark>w<mark>");
+                       $("#resultyp").append("<mark>y_predict</mark>");
+                       $("#resulte").append("<mark>error/result</mark>");
+                       for(var i=0;i<len;i++){
+                           for(var j=0;j<ret.xCnt;j++){
+                               $("#resultx").append(eval('ret.dataMat[' + i + '].x' + j) + " ");
+                           }
+                           $("#resultx").append("<div></div>");
+                           $("#resulty").append("<div class='resultyeach'>" + ret.labelMat[i] + "</div>");
+                           $("#resultyp").append("<div class='resultypeach'>" + ret.y_predict[i] + "</div>");
+                    }    
+                       for(var j=0;j<ret.xCnt;j++){
+                           $("#resultw").append("<div>" + ret.ws[j] + "</div>");
+                           $("#vaildx").append("<div class='vaildxeach'>x" + j + ":<input type='text' id='x"+j+"'/></div>" );
+                       }
+                       $("#resulte").append("<div>" + ret.rssE + "</div>");
+                    });
+            });
+            $("#vaildx").on("blur", "input", function() {
+                vaildNum(this, /^-?\d+$/);
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div class="content">
+        <div class="welcome">
+            <div class="container">
+                <form id="uploadform" enctype="multipart/form-data" method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="file">选择TXT文件上传:</label>
+                        <input type="file" name="file" id="file" class="file"/>
+                        <p class="help-block">txt文件必须以空格分隔，目标变量y必须在最后一列</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="uploadbtn">浏览后点击<mark>上传</mark>:</label>
+                        <input type="button" value="上传" id="uploadbtn" class="btn btn-info"/><span class="glyphicon glyphicon-arrow-up"></span>(默认显示前20行)
+                    </div>
+                    
+                    </form>
+                    
+                    <div class="form-group">
+                    <label for="algo">请选择一种算法：</label>
+                    <select id="algo">
+                        <option value="lr" selected="selected">线性回归</option>
+                        <option value="lwlr">局部加权线性回归</option>
+                        <option value="lrlr">逻辑回归</option>
+                        <option value="dt">决策树</option>
+                        <option value="nb">朴素贝叶斯</option>
+                        <option value="nw">神经网络</option>
+                        <option value="svm">支持向量机</option>
+                        <option value="ada">AdaBoost</option>
+                        <option value="km">Kmeans</option>
+                    </select>
+                    </div>
+                    <div id="uploadresult"></div>
+                </div>
+                <strong>一、数据呈现区：</strong>
+                <div id="result">
+                    <div id="resultx"></div>
+                    <div id="resulty"></div>
+                    <div id="resultw"></div>
+                    <div id="resultyp"></div>
+                    <div id="resulte"></div>
+                </div>
+                
+                <strong>二、结果验证区：</strong>
+                <div id="vaild">
+                    <div id="vaildx"></div>
+                    <div id="vaildy">
+                        <input id="vaildbtn" type="button" value="确定"/>
+                        y_predicted:<input id="vaildyeach" type="text"/>
+                    </div>
+                </div>
+                <strong>三、图表展现区：</strong>                
+                <div id="dplot"></div>
+                <script>
+                    $(document).ready(function (){
+                        $("#algo").change(function (){
+                            var algoid = $("#algo").val();
+                            var algoname = $("#algo").find("option:selected").text();
+                            require.config({
+                            paths:{echarts:'http://echarts.baidu.com/build/dist'}
+                            });
+                            require(['echarts','echarts/chart/line','echarts/chart/scatter',],DrawChart);
+                            var myChart;
+                            function DrawChart(ec){
+                                myChart = ec.init(document.getElementById('dplot'));                                
+                                var options = {
+                                    title:{text:algoname, subtext:'www.huangjunjun.com'},
+                                    tooltip : {trigger: 'axis'},
+                                    toolbox: {
+                                    show : true,
+                                    feature : {
+                                        mark : {show: true},
+                                        dataZoom : {show: true},
+                                        dataView : {show: true, readOnly: false},
+                                        restore : {show: true},
+                                        saveAsImage : {show: true}
+                                        }
+                                    },
+                                    xAxis:[{type:'category', name:'x0', scale:true, splitLine:{show:false}, data:[]}],
+                                    yAxis:[{type:'value', name:'y', scale:true}],
+                                    //series:[{'type':'bar', 'data':[10,20,30]}]
+                                    series:[{name:'原始', type:'scatter', data:[]}, {name:'拟合', type:'line', data:[]}]
+                                };  
+                                $.ajax({
+                                    url:"/algo/",
+                                    data:{'algoid':algoid,'algoname':algoname},
+                                    dataType:"json",
+                                    async:false,
+                                    method:"GET"
+                                }).done(function(ret){
+                                    var xy = []; var xyHat = []; var x0=[];
+                                    for(var i=0;i<ret.dataMat.length;i++){
+                                        var tmp = []; var tmp1 = [];
+                                        for(var j in ret.dataMat[i]){
+                                            if(j == "x0"){
+                                                x0.push(ret.dataMat[i].x0);
+                                                tmp.push(ret.dataMat[i].x0);
+                                                tmp1.push(ret.dataMat[i].x0);
+                                                tmp.push(ret.labelMat[i]);
+                                                tmp1.push(ret.y_predict[i]);
+                                            }
+                                        }
+                                        xy[i] = tmp; xyHat[i] = tmp1;
+                                   }
+                                   console.log(x0);
+                                   //options.xAxis[0].data = x0;
+                                   options.xAxis[0].data = x0;
+                                   options.series[0].data = xy;
+                                   options.series[1].data = ret.y_predict;
+                                   myChart.hideLoading();
+                                   myChart.setOption(options);
+                                });                        
+                            };
+                        });
+                    });
+                </script>
+            </div>
+        </div>
+    </div>
+{% endblock %}
