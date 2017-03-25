@@ -14,7 +14,8 @@ from books.forms import RegisterForm, LoginForm, ChangePasswordForm, MsgBoardFor
 # Create your views here.
 def index(request):
     count = getCount()
-    return render(request, 'index.html', {'count':count})
+    w = weather()
+    return render(request, 'index.html', {'count':count, 'weather':w})
 
 def django(request):
     return render(request, 'django.html')
@@ -151,3 +152,6 @@ def getCount():
     countFile.flush()
     countFile.close()
     return count
+def weather():
+    with open('weather.txt', 'r') as f:
+       return f.read()
